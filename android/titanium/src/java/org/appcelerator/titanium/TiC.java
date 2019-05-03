@@ -1033,6 +1033,9 @@ public class TiC
 	 */
 	public static final String PROPERTY_BACKGROUND_PREFIX = "background";
 
+	/**
+	 * @module.api
+	 */
 	public static final String PROPERTY_BACKGROUND_REPEAT = "backgroundRepeat";
 
 	/**
@@ -2722,6 +2725,9 @@ public class TiC
 	 */
 	public static final String PROPERTY_RETURN_KEY_TYPE = "returnKeyType";
 
+	/**
+	 * @module.api
+	 */
 	public static final String PROPERTY_REVERSE = "reverse";
 
 	/**
