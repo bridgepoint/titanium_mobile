@@ -9,6 +9,7 @@ package org.appcelerator.titanium;
 import android.content.Intent;
 import android.os.Bundle;
 import org.appcelerator.kroll.common.Log;
+import org.appcelerator.kroll.KrollRuntime;
 
 /** The activity that is shown when opening a Titanium "Ti.UI.Window" in JavaScript. */
 public class TiActivity extends TiBaseActivity
@@ -35,7 +36,7 @@ public class TiActivity extends TiBaseActivity
 		//    Last known parent activity won't be restored/recreated until after finishing the child activity.
 		//    So, in this case, we want to keep finishing child activities until we're back to the root activity.
 		// ---------------------------------------------------------------------------------------------------------
-		if (TiRootActivity.isScriptRunning() == false) {
+		if (KrollRuntime.getActivityRefCount() <= 0) {
 			Log.i(TAG, "Launching with '" + getClass().getName() + "' is not allowed. Closing activity.");
 			this.isInvalidLaunch = true;
 			activityOnCreate(savedInstanceState);
@@ -44,6 +45,7 @@ public class TiActivity extends TiBaseActivity
 			return;
 		}
 
+		// Create this activity normally.
 		super.onCreate(savedInstanceState);
 
 		// Fetch the root activity.

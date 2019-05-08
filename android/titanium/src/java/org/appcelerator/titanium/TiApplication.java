@@ -176,8 +176,7 @@ public abstract class TiApplication extends Application implements KrollApplicat
 	// application (typically when the root activity is destroyed)
 	public static void terminateActivityStack()
 	{
-		// Do not continue if there are no activities on the stack.
-		if ((activityStack == null) || (activityStack.size() <= 0)) {
+		if (activityStack == null || activityStack.size() == 0) {
 			return;
 		}
 
@@ -250,7 +249,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 	 * @return the current activity if exists. Otherwise, the thread will wait for a valid activity to be visible.
 	 * @module.api
 	 */
-	@Override
 	public Activity getCurrentActivity()
 	{
 		int activityStackSize;
@@ -259,7 +257,7 @@ public abstract class TiApplication extends Application implements KrollApplicat
 			Activity activity = (activityStack.get(activityStackSize - 1)).get();
 
 			// Skip and remove any activities which are dead or in the process of finishing.
-			if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+			if (activity == null || activity.isFinishing()) {
 				activityStack.remove(activityStackSize - 1);
 				continue;
 			}
@@ -315,7 +313,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		}
 	}
 
-	@Override
 	public void loadAppProperties()
 	{
 		// Load the JSON file:
@@ -515,9 +512,7 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		if (rootActivity != null) {
 			Activity activity = rootActivity.get();
 			if (activity != null) {
-				if (!activity.isFinishing() && !activity.isDestroyed()) {
-					return true;
-				}
+				return !activity.isFinishing();
 			}
 		}
 
@@ -591,7 +586,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 	/**
 	 * @return the app's GUID. Each application has a unique GUID.
 	 */
-	@Override
 	public String getAppGUID()
 	{
 		return getAppInfo().getGUID();
@@ -636,7 +630,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 	 * @return
 	 * Always returns true as of Titanium 8.0.0. The "run-on-main-thread" property is no longer supported.
 	 */
-	@Override
 	public boolean runOnMainThread()
 	{
 		return true;
@@ -662,7 +655,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		return false;
 	}
 
-	@Override
 	public String getDeployType()
 	{
 		return getAppInfo().getDeployType();
@@ -676,7 +668,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		return buildVersion;
 	}
 
-	@Override
 	public String getSDKVersion()
 	{
 		return getTiBuildVersion();
@@ -692,7 +683,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		return buildHash;
 	}
 
-	@Override
 	public String getDefaultUnit()
 	{
 		if (defaultUnit == null) {
@@ -707,7 +697,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		return defaultUnit;
 	}
 
-	@Override
 	public int getThreadStackSize()
 	{
 		return getAppProperties().getInt(PROPERTY_THREAD_STACK_SIZE, DEFAULT_THREAD_STACK_SIZE);
@@ -718,13 +707,11 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		return getAppProperties().getBool(PROPERTY_COMPILE_JS, false);
 	}
 
-	@Override
 	public TiDeployData getDeployData()
 	{
 		return deployData;
 	}
 
-	@Override
 	public boolean isFastDevMode()
 	{
 		/* Fast dev is enabled by default in development mode, and disabled otherwise
@@ -751,26 +738,8 @@ public abstract class TiApplication extends Application implements KrollApplicat
 	public void softRestart()
 	{
 		// Fetch the root activity hosting the JavaScript runtime.
-		TiRootActivity rootActivity = getRootActivity();
+		TiRootActivity rootActivity = TiApplication.getInstance().getRootActivity();
 		if (rootActivity == null) {
-			// Root activity not found. This can happen when:
-			// - No UI is currently displayed. (Never launched or has been fully exited.)
-			// - The UI is in the middle of exiting. (CLEAR_TOP flag usually destroys root activity first.)
-			// - System setting "Don't keep activities" is enabled. (This destroys parent/backgrounded activites.)
-			Activity currentActivity = getCurrentActivity();
-			if (currentActivity != null) {
-				// We have a child activity. Do a "hard" restart by relaunching the root activity.
-				// The CLEAR_TOP flag will destroy all child activities for us and terminate JS runtime gracefully.
-				Intent mainIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
-				mainIntent.setPackage(null);
-				mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-				mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				mainIntent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-				currentActivity.startActivity(mainIntent);
-			} else {
-				// We don't have any UI. Give up.
-				Log.w(TAG, "Unable to soft-restart Titanium runtime.");
-			}
 			return;
 		}
 
@@ -802,7 +771,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		runtime.doRunModule(KrollAssetHelper.readAsset(appPath), appPath, rootActivity.getActivityProxy());
 	}
 
-	@Override
 	public TiTempFileHelper getTempFileHelper()
 	{
 		return tempFileHelper;
@@ -840,13 +808,11 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		modules.put(name, new WeakReference<KrollModule>(module));
 	}
 
-	@Override
 	public void waitForCurrentActivity(CurrentActivityListener l)
 	{
 		TiUIHelper.waitForCurrentActivity(l);
 	}
 
-	@Override
 	public boolean isDebuggerEnabled()
 	{
 		return getDeployData().isDebuggerEnabled();
@@ -910,7 +876,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		unregisterReceiver(externalStorageReceiver);
 	}
 
-	@Override
 	public void dispose()
 	{
 		TiActivityWindows.dispose();
@@ -918,7 +883,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		TiFileHelper.getInstance().destroyTempFiles();
 	}
 
-	@Override
 	public void cancelTimers()
 	{
 		TitaniumModule.cancelTimers();

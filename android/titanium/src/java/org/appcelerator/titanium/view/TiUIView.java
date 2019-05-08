@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
@@ -91,6 +92,8 @@ public abstract class TiUIView implements KrollProxyListener, OnFocusChangeListe
 
 	private static final int LAYER_TYPE_SOFTWARE = 1;
 	private static final String TAG = "TiUIView";
+
+	private static AtomicInteger idGenerator;
 
 	// When distinguishing twofingertap and pinch events, minimum motion (in pixels)
 	// to qualify as a scale event.
@@ -172,6 +175,10 @@ public abstract class TiUIView implements KrollProxyListener, OnFocusChangeListe
 	 */
 	public TiUIView(TiViewProxy proxy)
 	{
+		if (idGenerator == null) {
+			idGenerator = new AtomicInteger(0);
+		}
+
 		this.proxy = proxy;
 		this.layoutParams = new TiCompositeLayout.LayoutParams();
 	}
@@ -329,6 +336,9 @@ public abstract class TiUIView implements KrollProxyListener, OnFocusChangeListe
 	 */
 	protected void setNativeView(View view)
 	{
+		if (view.getId() == View.NO_ID) {
+			view.setId(idGenerator.incrementAndGet());
+		}
 		this.nativeView = view;
 		boolean clickable = true;
 
@@ -2170,16 +2180,14 @@ public abstract class TiUIView implements KrollProxyListener, OnFocusChangeListe
 			return null;
 		}
 
-		KrollDict properties = proxy.getProperties();
-		if (properties == null) {
-			return null;
-		}
-
 		final String punctuationPattern = "^.*\\p{Punct}\\s*$";
 		StringBuilder buffer = new StringBuilder();
-		String label = TiConvert.toString(properties.get(TiC.PROPERTY_ACCESSIBILITY_LABEL));
-		String hint = TiConvert.toString(properties.get(TiC.PROPERTY_ACCESSIBILITY_HINT));
-		String value = TiConvert.toString(properties.get(TiC.PROPERTY_ACCESSIBILITY_VALUE));
+
+		KrollDict properties = proxy.getProperties();
+		String label, hint, value;
+		label = TiConvert.toString(properties.get(TiC.PROPERTY_ACCESSIBILITY_LABEL));
+		hint = TiConvert.toString(properties.get(TiC.PROPERTY_ACCESSIBILITY_HINT));
+		value = TiConvert.toString(properties.get(TiC.PROPERTY_ACCESSIBILITY_VALUE));
 
 		if (!TextUtils.isEmpty(label)) {
 			buffer.append(label);
